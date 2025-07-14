@@ -1,6 +1,7 @@
-from typing import List
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
+from typing import List, Optional
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, status, Query
 from pydantic import UUID4
+from decimal import Decimal
 from store.core.exceptions import NotFoundException
 
 from store.schemas.product import ProductIn, ProductOut, ProductUpdate, ProductUpdateOut
@@ -33,8 +34,11 @@ async def get(
 
 
 @router.get(path="/", status_code=status.HTTP_200_OK)
-async def query(usecase: ProductUsecase = Depends()) -> List[ProductOut]:
-    return await usecase.query()
+async def query(
+    valorMinimo: Optional[Decimal] = Query(None),
+    valorMaximo: Optional[Decimal] = Query(None),
+    usecase: ProductUsecase = Depends()) -> List[ProductOut]:
+    return await usecase.query(minimo=valorMinimo, maximo=valorMaximo)
 
 
 @router.patch(path="/{id}", status_code=status.HTTP_200_OK)
