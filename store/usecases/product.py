@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
+from decimal import Decimal
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 import pymongo
 from store.db.mongo import db_client
@@ -28,8 +29,17 @@ class ProductUsecase:
 
         return ProductOut(**result)
 
-    async def query(self) -> List[ProductOut]:
-        return [ProductOut(**item) async for item in self.collection.find()]
+    async def query(self, minimo: Optional[Decimal] = None, maximo: Optional[Decimal] = None) -> List[ProductOut]:
+        filtro = {}
+
+        if minimo is not None or maximo is not None:
+            filtro["price"] = {}
+            if minimo is not None:
+                filtro["price"]["$gte"] = float(minimo)
+            if maximo is not None:
+                filtro["price"]["$lte"] = float(maximo)
+
+        return [ProductOut(**item) async for item in self.collection.find(filtro)]
 
     async def update(self, id: UUID, body: ProductUpdate) -> ProductUpdateOut:
         objeto = body.model.dump(exclude_none=True)
